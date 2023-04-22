@@ -27,20 +27,20 @@ args = parser.parse_args()
 
 
 def get_urls():
-    with open(args.data, "r", errors="ignore") as f, open(args.output, "w") as out:
+    with (open(args.data, "r", errors="ignore") as f, open(args.output, "w") as out):
         for i, line in enumerate(f, start=1):
             refs = re.search("&lt;ref&gt(.*)&lt;/ref&gt;", line)
             if refs is not None:
                 results = re.findall(
                     r"\b(?:https?|telnet|gopher|file|wais|ftp):[\w/#~:.?+=&%@!\-.:?\\-]+?(?=[.:?\-]*(?:[^\w/#~:.?+=&%@!\-.:?\-]|$))",
-                    refs.group(0),
+                    refs[0],
                 )
                 if len(results) > 0:
                     for result in results:
                         out.write(result + "\n")
 
             if args.verbose and i % 1000000 == 0:
-                print("Lines searched: {}".format(i), end="\r")
+                print(f"Lines searched: {i}", end="\r")
 
 
 def main():

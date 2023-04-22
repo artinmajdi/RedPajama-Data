@@ -43,10 +43,10 @@ def get_executor(
         options: dict = {},
 ) -> Executor:
     execution_mode = execution.split(",")[0]
-    options.update(
-        {kv.split("=", 1)[0]: kv.split("=", 1)[1] for kv in
-         execution.split(",")[1:]}
-    )
+    options |= {
+        kv.split("=", 1)[0]: kv.split("=", 1)[1]
+        for kv in execution.split(",")[1:]
+    }
 
     if execution_mode == "mp":
         warnings.warn("Execution mode 'mp' is deprecated, use 'local'.")
@@ -99,7 +99,7 @@ def map_array_and_wait(
 ):
     f_name = function.__name__
 
-    assert len(args) > 0, f"No arguments passed to {f_name}"
+    assert args, f"No arguments passed to {f_name}"
     approx_length = _approx_length(*args)
 
     print(f"Submitting {f_name} in a job array ({approx_length} jobs)")
@@ -156,10 +156,7 @@ def debug_executor(function: Callable[..., Optional[str]],
 
 
 def _approx_length(*args: Iterable):
-    for a in args:
-        if isinstance(a, Sized):
-            return len(a)
-    return -1
+    return next((len(a) for a in args if isinstance(a, Sized)), -1)
 
 
 def custom_map_array(
@@ -169,7 +166,7 @@ def custom_map_array(
         *args: Iterable,
 ) -> None:
     f_name = function.__name__
-    assert len(args) > 0, f"No arguments passed to {f_name}"
+    assert args, f"No arguments passed to {f_name}"
 
     jobs_args = list(zip(*args))
     total = len(jobs_args)

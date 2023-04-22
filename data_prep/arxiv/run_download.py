@@ -51,8 +51,7 @@ class ArxivDownloader:
                 break
 
     def __download_file(self, key, tgt_dir: pathlib.Path):
-        print('\nDownloading s3://arxiv/{} t'
-              'o {}...'.format(key, pathlib.Path(tgt_dir, key)))
+        print(f'\nDownloading s3://arxiv/{key} to {pathlib.Path(tgt_dir, key)}...')
 
         try:
             self.s3resource.meta.client.download_file(
@@ -62,7 +61,7 @@ class ArxivDownloader:
                 ExtraArgs={'RequestPayer': 'requester'})
         except ClientError as e:
             if e.response['Error']['Code'] == "404":
-                print('ERROR: ' + key + " does not exist in arxiv bucket")
+                print(f'ERROR: {key} does not exist in arxiv bucket')
             else:
                 try:
                     code = e.response['Error']['Code']

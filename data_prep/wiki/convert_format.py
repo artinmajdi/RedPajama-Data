@@ -11,7 +11,7 @@ with open(LEMMA_DATA_SAVE_DIR, "w") as fw:
     for file in files:
         lan = file.split("_")[1]
         date = file.split("_")[2]
-        print("Now proceeding %s"%file, lan, date)
+        print(f"Now proceeding {file}", lan, date)
 
         with open(os.path.join(LEMMA_DATA_DIR_SE_OUT, file), "r") as f:
             lines = f.readlines()

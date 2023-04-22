@@ -51,32 +51,29 @@ def main():
     stats_filepaths = list(first_step_dir.glob("stats_*.jsonl"))
     total_files_to_process = len(stats_filepaths)
 
-    deduped_stats_file = open(deduped_stats_fp, "w")
+    with open(deduped_stats_fp, "w") as deduped_stats_file:
+        hash_set = {}
 
-    hash_set = {}
+        for file_num, fp in enumerate(stats_filepaths, start=1):
+            print(f"[{get_timestamp()}][INFO]"
+                  f"[{file_num}/{total_files_to_process}] "
+                  f"Processing {fp}")
 
-    for file_num, fp in enumerate(stats_filepaths, start=1):
-        print(f"[{get_timestamp()}][INFO]"
-              f"[{file_num}/{total_files_to_process}] "
-              f"Processing {fp}")
+            hash_set, deduped_stats, deduped_hashes = process_stats_file(
+                fp, hash_set
+            )
 
-        hash_set, deduped_stats, deduped_hashes = process_stats_file(
-            fp, hash_set
-        )
+            # write out stats
+            for stats in deduped_stats:
+                deduped_stats_file.write(json.dumps(stats) + "\n")
 
-        # write out stats
-        for stats in deduped_stats:
-            deduped_stats_file.write(json.dumps(stats) + "\n")
+            # write out jsonl to hashes
+            out_fn = fp.name.replace("stats_", "hashes_")
+            with open(pathlib.Path(args.target_dir) / out_fn, "w") as f:
+                f.write(json.dumps({"hashes": deduped_hashes}) + "\n")
 
-        # write out jsonl to hashes
-        out_fn = fp.name.replace("stats_", "hashes_")
-        with open(pathlib.Path(args.target_dir) / out_fn, "w") as f:
-            f.write(json.dumps({"hashes": deduped_hashes}) + "\n")
-
-        print(f"[{get_timestamp()}][INFO] Flushing ...")
-        deduped_stats_file.flush()
-
-    deduped_stats_file.close()
+            print(f"[{get_timestamp()}][INFO] Flushing ...")
+            deduped_stats_file.flush()
 
     print(f"[{get_timestamp()}][INFO] "
           f"Total number of unique records: {len(hash_set)}")

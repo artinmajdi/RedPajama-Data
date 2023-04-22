@@ -21,7 +21,7 @@ def bar(small_bar: str) -> str:
 def get_output(transformer, data, **kwargs):
     with io.StringIO() as output:
         # Convert data to a generator so that it's not interpreted as a file list.
-        jsonql.run_pipe(transformer, kwargs, file=(x for x in data), output=output)
+        jsonql.run_pipe(transformer, kwargs, file=iter(data), output=output)
         return output.getvalue()
 
 
@@ -128,8 +128,7 @@ def test_describe():
 def test_custom_pipe():
     def transformer(source, sep=" "):
         for i, line in enumerate(source):
-            res = f"{i}{sep}{line}"
-            yield res
+            yield f"{i}{sep}{line}"
 
     data = ["hello", "world"]
     assert get_output(transformer, data) == "0 hello\n1 world\n"
@@ -236,9 +235,9 @@ def test_blocked_gzip(tmp_path: Path):
     # read as one file
     assert expected == list(jsonql.read_jsons(file))
     # read first block
-    assert expected[:2] == list(jsonql.read_jsons(f + "[0/40]"))
+    assert expected[:2] == list(jsonql.read_jsons(f"{f}[0/40]"))
     # read last block
-    assert expected[-2:] == list(jsonql.read_jsons(f + "[39/40]"))
+    assert expected[-2:] == list(jsonql.read_jsons(f"{f}[39/40]"))
 
     readers = jsonql.get_block_readers(file, 9)
     read_as_several_files = [list(jsonql.read_jsons(r)) for r in readers]
@@ -247,6 +246,7 @@ def test_blocked_gzip(tmp_path: Path):
 
 
 def test_enter_exit(capsys):
+
     class MyTransformer(jsonql.Transformer):
         def __enter__(self):
             print("trans: started")
@@ -281,8 +281,7 @@ def test_enter_exit(capsys):
                 "trans: started",
                 "acc: started",
                 "acc: done",
-                f"acc: result=45",
-                # Transformers are closed at the very end.
+                "acc: result=45",
                 "trans: done",
                 "pipeline: done\n",
             ]
@@ -309,4 +308,4 @@ def test_multiprocess(capsys):
     mult = jsonql.Mapper(lambda x: f"2x = {2 * int(x)}")
     jsonql.run_pipes(mult, processes=2, file=(str(x) for x in range(10)))
     out = set(capsys.readouterr().out.strip("\n").split("\n"))
-    assert set(f"2x = {2 * x}" for x in range(10)) == out
+    assert {f"2x = {2 * x}" for x in range(10)} == out

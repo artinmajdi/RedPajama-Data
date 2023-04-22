@@ -25,8 +25,7 @@ def get_timestamp() -> str:
 
 
 def clean_copyright_comments(content: str):
-    r = PAT.search(content)
-    if r:
+    if r := PAT.search(content):
         # found one, now see if it contains "copyright", if so strip it
         span = r.span()
         sub = content[span[0]:span[1]]
@@ -41,12 +40,12 @@ def clean_copyright_comments(content: str):
 
     # Greedy replace any file that begins with comment block, most
     # are copyright headers
-    for k in range(len(lines)):
+    for line in lines:
         if (
-                lines[k].startswith("//") or
-                lines[k].startswith("#") or
-                lines[k].startswith("--") or
-                not lines[k]
+            line.startswith("//")
+            or line.startswith("#")
+            or line.startswith("--")
+            or not line
         ):
             skip = skip + 1
         else:
@@ -63,7 +62,7 @@ def get_filecontent_stats(content: str) -> Dict[str, Union[int, str]]:
     # split content into lines and get line lengths
     line_lengths = list(map(len, content.splitlines()))
 
-    if len(line_lengths) == 0:
+    if not line_lengths:
         return {
             "line_count": 0,
             "max_line_length": 0,
@@ -175,58 +174,57 @@ def main():
     print(f"[{get_timestamp()}][INFO] Writing records to {run_fp}")
     print(f"[{get_timestamp()}][INFO] Writing stats to {stats_fp}")
 
-    stats_file = open(stats_fp, "w")
-    records_file = open(run_fp, "w")
+    with open(stats_fp, "w") as stats_file:
+        records_file = open(run_fp, "w")
 
-    # process list of *.gz files in input_file
-    with open(args.input, "r") as input_file:
-        files_to_process = input_file.readlines()
+        # process list of *.gz files in input_file
+        with open(args.input, "r") as input_file:
+            files_to_process = input_file.readlines()
 
-    total_files_to_process = len(files_to_process)
+        total_files_to_process = len(files_to_process)
 
-    hash_table = {}
+        hash_table = {}
 
-    for file_num, fp in enumerate(files_to_process, start=1):
-        fp = fp.strip()
+        for file_num, fp in enumerate(files_to_process, start=1):
+            fp = fp.strip()
 
-        if not fp:
-            print(f"[{get_timestamp()}][WARNING]"
+            if not fp:
+                print(f"[{get_timestamp()}][WARNING]"
+                      f"[{file_num}/{total_files_to_process}] "
+                      f"Skipping empty line {fp}")
+                continue
+
+            if not fp.endswith(".gz"):
+                print(f"[{get_timestamp()}][WARNING]"
+                      f"[{file_num}/{total_files_to_process}] "
+                      f"Skipping {fp}")
+                continue
+
+            source_fp = pathlib.Path(fp)
+
+            print(f"[{get_timestamp()}][INFO]"
                   f"[{file_num}/{total_files_to_process}] "
-                  f"Skipping empty line {fp}")
-            continue
+                  f"Processing {fp}")
 
-        if not fp.endswith(".gz"):
-            print(f"[{get_timestamp()}][WARNING]"
-                  f"[{file_num}/{total_files_to_process}] "
-                  f"Skipping {fp}")
-            continue
+            # get file stats and clean records
+            chunk_stats, cleaned_records = preprocess_source(
+                source_fp, hash_table
+            )
 
-        source_fp = pathlib.Path(fp)
+            # write out stats
+            for stats in chunk_stats:
+                stats_file.write(json.dumps(stats) + "\n")
 
-        print(f"[{get_timestamp()}][INFO]"
-              f"[{file_num}/{total_files_to_process}] "
-              f"Processing {fp}")
+            # write out cleaned records
+            for record in cleaned_records:
+                records_file.write(json.dumps(record) + "\n")
 
-        # get file stats and clean records
-        chunk_stats, cleaned_records = preprocess_source(
-            source_fp, hash_table
-        )
+            if file_num % flush_every == 0:
+                # make sure data is written to disk
+                print(f"[{get_timestamp()}][INFO] Flushing ...")
+                stats_file.flush()
+                records_file.flush()
 
-        # write out stats
-        for stats in chunk_stats:
-            stats_file.write(json.dumps(stats) + "\n")
-
-        # write out cleaned records
-        for record in cleaned_records:
-            records_file.write(json.dumps(record) + "\n")
-
-        if file_num % flush_every == 0:
-            # make sure data is written to disk
-            print(f"[{get_timestamp()}][INFO] Flushing ...")
-            stats_file.flush()
-            records_file.flush()
-
-    stats_file.close()
     records_file.close()
 
 

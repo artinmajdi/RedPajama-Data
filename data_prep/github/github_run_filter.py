@@ -29,8 +29,7 @@ extensions_whitelist = (".asm", ".bat", ".cmd", ".c", ".h", ".cs", ".cpp",
 
 
 def get_token_count(text):
-    token_count = len(tokenizer.tokenize(text))
-    return token_count
+    return len(tokenizer.tokenize(text))
 
 
 def get_timestamp() -> str:
@@ -66,10 +65,7 @@ def discard_record(record):
 
     num_tokens = get_token_count(text)
     num_alpha = len([c for c in text if c.isalpha()])
-    if num_alpha / num_tokens < 1.5:
-        return True
-
-    return False
+    return num_alpha / num_tokens < 1.5
 
 
 def filter_line(line):
@@ -78,10 +74,7 @@ def filter_line(line):
     except json.decoder.JSONDecodeError:
         return None
 
-    if discard_record(record):
-        return None
-
-    return line
+    return None if discard_record(record) else line
 
 
 def process_lines_batch(lines_batch, out_file, num_cpus):

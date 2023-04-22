@@ -71,18 +71,17 @@ def process_site(site):
                             },
                             "answers": parents[post_id]
                         })
-                    else:
-                        if "Title" in root.attrib:
-                            # if there's a title => then a valid question
-                            body = root.attrib["Body"] if "Body" in root.attrib else ""
-                            score = root.attrib["Score"] if "Score" in root.attrib else 0
-                            qa_pairs.append({
-                                "question": {
-                                    "id": post_id,
-                                    "text": f"{root.attrib['Title']} {body}",
-                                    "score": score
-                                },
-                            })
+                    elif "Title" in root.attrib:
+                        # if there's a title => then a valid question
+                        body = root.attrib["Body"] if "Body" in root.attrib else ""
+                        score = root.attrib["Score"] if "Score" in root.attrib else 0
+                        qa_pairs.append({
+                            "question": {
+                                "id": post_id,
+                                "text": f"{root.attrib['Title']} {body}",
+                                "score": score
+                            },
+                        })
     # write qa_pairs to file
     print(f"[INFO] Writing {site} to file...")
     os.makedirs(os.path.join(LEMMA_DATA_DIR_SE, "qa_pairs"), exist_ok=True)

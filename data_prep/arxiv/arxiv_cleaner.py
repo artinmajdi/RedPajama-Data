@@ -130,12 +130,11 @@ class ArxivCleaner:
         """
         if tar_fp_list is None:
             def _tar_fp_iterator():
-                for _tar_fp in self._data_dir.glob("*.tar"):
-                    yield _tar_fp
+                yield from self._data_dir.glob("*.tar")
+
         else:
             def _tar_fp_iterator():
-                for _tar_fp in tar_fp_list:
-                    yield _tar_fp
+                yield from tar_fp_list
 
         failed = 0
         processed = 0
@@ -319,7 +318,7 @@ def clean_tex_files(tex_files: List[str]) -> str:
     @return: cleaned tex project as a string, empty string if no tex files are
         provided
     """
-    if len(tex_files) == 0:
+    if not tex_files:
         return ""
 
     # build dictionaries that contain the definitions of all macros in all tex
@@ -329,22 +328,19 @@ def clean_tex_files(tex_files: List[str]) -> str:
 
     non_arg_macros = {}
     for file_content in tex_files:
-        non_arg_macros.update(_build_non_arg_macros_dict(file_content))
+        non_arg_macros |= _build_non_arg_macros_dict(file_content)
 
     # TODO: macros that take arguments are not supported yet
     arg_macros = {}
 
-    # join multiple latex files with a newline character
-    cleaned_latex_file_str = "\n".join(
+    return "\n".join(
         _clean_tex_file(
             file_content=file_content,
             arg_macros=arg_macros,
-            non_arg_macros=non_arg_macros
+            non_arg_macros=non_arg_macros,
         )
         for file_content in tex_files
     )
-
-    return cleaned_latex_file_str
 
 
 def _clean_tex_file(
@@ -364,11 +360,7 @@ def _clean_tex_file(
 
     @return: cleaned tex file as a string
     """
-    # find the first occurence of a \section-like header and replace everything
-    # before it with an empty string. This matches the following pattern:
-    #   \<section-type>[optional-args]{name}
-    pattern = r"^(.*?)("
-    pattern += r"\\\bchapter\b\*?(?:\[(.*?)\])?\{(.*?)\}|"
+    pattern = r"^(.*?)(" + r"\\\bchapter\b\*?(?:\[(.*?)\])?\{(.*?)\}|"
     pattern += r"\\\bpart\b\*?(?:\[(.*?)\])?\{(.*?)\}|"
     pattern += r"\\\bsection\b\*?(?:\[(.*?)\])?\{(.*?)\}|"
     pattern += r"\\\bsubsection\b\*?(?:\[(.*?)\])?\{(.*?)\}|"
@@ -407,10 +399,7 @@ def _clean_tex_file(
         flags=re.MULTILINE
     )
 
-    # find the first occurence of either \appendix or \bibliography and
-    # replace everything after it with an empty string
-    pattern = r"("
-    pattern += r"\\appendix|"
+    pattern = r"(" + r"\\appendix|"
     pattern += r"\\begin\{references\}|"
     pattern += r"\\begin\{REFERENCES\}|"
     pattern += r"\\begin\{thebibliography\}|"
@@ -427,13 +416,9 @@ def _clean_tex_file(
     # inline-expand all non-arg macros
     for macro_name, macro_value in non_arg_macros.items():
         file_content = re.sub(
-            # make pattern grouped to make sure that the macro is not part
-            # of a longer alphanumeric word
-            pattern=r"(" + macro_name + r")" + r"([^a-zA-Z0-9])",
-            # replace the macro with its value and add back the character that
-            # was matched after the macro
+            pattern=f"({macro_name})([^a-zA-Z0-9])",
             repl=macro_value + r"\2",
-            string=file_content
+            string=file_content,
         )
 
     # inline-expand all macros that use args

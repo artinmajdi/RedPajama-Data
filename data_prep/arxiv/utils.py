@@ -57,7 +57,4 @@ def format_arxiv_id(arxiv_id: str) -> str:
     if match is None:
         raise ValueError(f"Invalid arxiv id: {arxiv_id}")
 
-    if match.group(1) == "":
-        return match.group(2)
-
-    return f"{match.group(1)}/{match.group(2)}"
+    return match[2] if match[1] == "" else f"{match[1]}/{match[2]}"

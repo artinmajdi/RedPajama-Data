@@ -8,15 +8,12 @@ import os
 
 from multiprocessing import Pool
 
-# Get all jobs.
-# Each job corresponds to a file ends with .gz, with middle or head in it
-#
-jobs = []
 os.chdir(sys.argv[1])
-for file in glob.glob("*/*.gz"):
-    if ("middle" in file or "head" in file) and "dedup" not in file:
-        jobs.append(file)
-
+jobs = [
+    file
+    for file in glob.glob("*/*.gz")
+    if ("middle" in file or "head" in file) and "dedup" not in file
+]
 print("TOTAL # JOBS:", len(jobs))
 
 
@@ -24,7 +21,7 @@ print("TOTAL # JOBS:", len(jobs))
 #
 def run(job):
     print(job)
-    ofile = gzip.open( job + ".dedup", "wt")
+    ofile = gzip.open(f"{job}.dedup", "wt")
     for jstr in gzip.open(job, "rt"):
         result = json.loads(jstr)
         ofile.write(result['url'] + " " + result['digest'] + "\n")
