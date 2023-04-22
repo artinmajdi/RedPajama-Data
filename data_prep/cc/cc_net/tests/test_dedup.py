@@ -27,7 +27,7 @@ def write_docs(file: Path, docs: Iterable[Sequence[str]]):
 
 def as_dict(hash_set):
     if not isinstance(hash_set, dict):
-        hash_set = {k: v for (k, v) in hash_set.items()}
+        hash_set = dict(hash_set.items())
     return hash_set
 
 
@@ -97,9 +97,10 @@ def test_dedup_with_np_dump(tmp_path: Path):
 
     results = FlatHashSet()
     results.load_np(hashes)
-    expected = set(
-        str_hash(l) for l in ["_hello", "_world", "i'm so original", "i'm originaler"]
-    )
+    expected = {
+        str_hash(l)
+        for l in ["_hello", "_world", "i'm so original", "i'm originaler"]
+    }
     assert expected == set(results.keys())
 
 

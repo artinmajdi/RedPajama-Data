@@ -20,14 +20,12 @@ def load_index(
     path: str,
 ):
     """Load the index from a path."""
-    index = faiss.read_index(path)
-    return index
+    return faiss.read_index(path)
 
 
 def load_pca(path: str):
     """Load the PCA from a path."""
-    pca = faiss.read_VectorTransform(path)
-    return pca
+    return faiss.read_VectorTransform(path)
 
 
 def create_model_and_tokenizer(

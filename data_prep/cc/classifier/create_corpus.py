@@ -28,11 +28,11 @@ for f in files:
 
         print("__label__wiki " + " ".join(result["raw_content"].splitlines()))
 
-jobs = []
-for file in glob.glob("common_crawl/*/*/*.gz"):
-    if ("middle" in file or "head" in file) and "dedup" not in file:
-        jobs.append(file)
-
+jobs = [
+    file
+    for file in glob.glob("common_crawl/*/*/*.gz")
+    if ("middle" in file or "head" in file) and "dedup" not in file
+]
 ## Fetch `perfile` number of webpages for each CommonCrawl partition
 #
 perfile = i / len(jobs)

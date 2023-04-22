@@ -35,35 +35,32 @@ def main():
         globally_unique_hashes = hf.readlines()[0]
 
     globally_unique_hashes = set(json.loads(globally_unique_hashes)["hashes"])
-    output_file = open(output_fp, "w")
+    with open(output_fp, "w") as output_file:
+        print(f"[{get_timestamp()}][INFO]"
+              f" Processing {input_fp}")
+        print(f"[{get_timestamp()}][INFO]"
+              f" Writing to {output_fp}")
+        print(f"[{get_timestamp()}][INFO]"
+              f" Using hashes from {hashes_fp}")
 
-    print(f"[{get_timestamp()}][INFO]"
-          f" Processing {input_fp}")
-    print(f"[{get_timestamp()}][INFO]"
-          f" Writing to {output_fp}")
-    print(f"[{get_timestamp()}][INFO]"
-          f" Using hashes from {hashes_fp}")
+        nrecs = 0
 
-    nrecs = 0
+        with open(input_fp, "r") as in_file:
+            while True:
+                jstr = in_file.readline()
 
-    with open(input_fp, "r") as in_file:
-        while True:
-            jstr = in_file.readline()
+                if not jstr:
+                    break
 
-            if not jstr:
-                break
+                record = json.loads(jstr)
+                content_hash = record["meta"]["content_hash"]
 
-            record = json.loads(jstr)
-            content_hash = record["meta"]["content_hash"]
+                if content_hash not in globally_unique_hashes:
+                    continue
 
-            if content_hash not in globally_unique_hashes:
-                continue
-
-            # write to output file
-            output_file.write(json.dumps(record) + "\n")
-            nrecs += 1
-
-    output_file.close()
+                # write to output file
+                output_file.write(json.dumps(record) + "\n")
+                nrecs += 1
 
     print(f"[{get_timestamp()}][INFO]"
           f" Processed {nrecs} records")

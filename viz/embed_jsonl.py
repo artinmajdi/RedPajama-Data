@@ -110,9 +110,10 @@ def load_dataframe(path):
     except ValueError:
         pass
 
-    assert set(df.columns) >= set(
-        ["id", "text"]
-    ), f"Unexpected columns: {set(df.columns)}"
+    assert set(df.columns) >= {
+        "id",
+        "text",
+    }, f"Unexpected columns: {set(df.columns)}"
     return df
 
 
@@ -188,9 +189,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--cache_dir", type=str, default="/home/karan/models/")
     parser.add_argument(
-        "--feature_dir",
-        type=str,
-        default=f"/home/karan/data/pyjama/features/",
+        "--feature_dir", type=str, default="/home/karan/data/pyjama/features/"
     )
 
     args = parser.parse_args()

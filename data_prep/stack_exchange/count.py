@@ -15,10 +15,10 @@ def get_sites_count(path=LEMMA_DATA_DIR_SE):
         # read the file
         with open(os.path.join(path, site), "r") as f:
             # read # lines
-            count = sum(1 for line in f)
+            count = sum(1 for _ in f)
             counts[site] = count-3 # subtract the header
     # sort the counts
-    counts = {k: v for k, v in sorted(counts.items(), key=lambda item: item[1], reverse=True)}
+    counts = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
     return counts
 
 

@@ -46,9 +46,7 @@ def run_clean(
         worker_id = str(uuid.uuid4())
 
     # create temporary work directory
-    work_dir = pathlib.Path(
-        tempfile.mkdtemp(dir=WORK_DIR, prefix=worker_id + "_")
-    )
+    work_dir = pathlib.Path(tempfile.mkdtemp(dir=WORK_DIR, prefix=f"{worker_id}_"))
 
     if input_file is not None:
         # we are running on slurm
@@ -73,8 +71,7 @@ def partition_tar_files(
         data_dir: pathlib.Path, workers: int
 ) -> List[List[str]]:
     return np.array_split(
-        list(str(fp) for fp in data_dir.glob('*.tar')),
-        indices_or_sections=workers
+        [str(fp) for fp in data_dir.glob('*.tar')], indices_or_sections=workers
     )
 
 

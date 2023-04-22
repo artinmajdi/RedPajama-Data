@@ -11,14 +11,12 @@ import multiprocessing
 
 import gc
 
-# Get all jobs
-#
-jobs = []
 os.chdir(sys.argv[1])
-for file in glob.glob("*/*.gz"):
-    if ("middle" in file or "head" in file) and "dedup" not in file:
-        jobs.append(file)
-
+jobs = [
+    file
+    for file in glob.glob("*/*.gz")
+    if ("middle" in file or "head" in file) and "dedup" not in file
+]
 print("TOTAL # JOBS:", len(jobs))
 
 # Load all pairs of (fileid, digest)
@@ -37,7 +35,7 @@ def load(job):
     #if counter.value > 10:
     #    return {}
 
-    for line in gzip.open(job + ".dedup", mode='rt'):
+    for line in gzip.open(f"{job}.dedup", mode='rt'):
         (fileid, digest) = line.split(" ")
         load_job[fileid] = digest
     return load_job
@@ -45,10 +43,7 @@ def load(job):
 with Pool(64) as p:
     loaded_ = p.map(load, jobs)
 
-loaded = {}
-for j in range(0, len(jobs)):
-    loaded[jobs[j]] = loaded_[j]
-
+loaded = {jobs[j]: loaded_[j] for j in range(len(jobs))}
 # Dedup
 # unique fileIDs are in unique_fileid
 # also write unique fileID for each job in its own file
@@ -56,9 +51,9 @@ for j in range(0, len(jobs)):
 table = {}
 unique_fileid = {}
 #ufile = gzip.open("uniqie_fileids", "wt")
-for job in loaded:
-    print("loaded", job, len(loaded[job]))
-    ufile = gzip.open(job + ".uniqie_fileids", "wt")
+for job, value in loaded.items():
+    print("loaded", job, len(value))
+    ufile = gzip.open(f"{job}.uniqie_fileids", "wt")
     for fileid in loaded[job]:
         digest = loaded[job][fileid]
         if digest not in table:
@@ -83,7 +78,7 @@ def write(job):
         counter.value += 1
     print("write", counter.value, job)
 
-    ofile = gzip.open( job + ".result", "wt")
+    ofile = gzip.open(f"{job}.result", "wt")
     wrote = 0
     total = 0
     for jstr in gzip.open(job, "rt"): 

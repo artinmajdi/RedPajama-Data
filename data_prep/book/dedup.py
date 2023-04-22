@@ -75,12 +75,12 @@ def book_index(num):
 
 def get_pg19(njobs):
     with Pool(n_jobs) as p:
-        hashes_members = p.map(pg19_index, [i for i in range(15)])
+        hashes_members = p.map(pg19_index, list(range(15)))
     return hashes_members 
 
 def get_book(njobs):
     with Pool(n_jobs) as p:
-        hashes_members = p.map(book_index, [i for i in range(99)])
+        hashes_members = p.map(book_index, list(range(99)))
     return hashes_members 
 
 def split_list(list, n):
@@ -154,9 +154,6 @@ if __name__ == "__main__":
     with open(outfile, 'w') as f:
         for mem, a_hash in mem_hashes:
             if value_dict[a_hash[0]] == 1:
-                meta = {}
-                for feature in mem:
-                    if feature != "text":
-                        meta[feature] = mem[feature]
+                meta = {feature: mem[feature] for feature in mem if feature != "text"}
                 new = {"meta": meta, "text": mem["text"]}
                 f.write(json.dumps(new) + '\n')

@@ -56,7 +56,7 @@ def process_qa_pair(pair):
     }
 
 # load qa_pairs
-sites = [x for x in os.listdir(os.path.join(LEMMA_DATA_DIR_SE, "qa_pairs"))]
+sites = list(os.listdir(os.path.join(LEMMA_DATA_DIR_SE, "qa_pairs")))
 
 # if needed:
 # sort sites such that stackoverflow is processed first - to understand the memory pressure
@@ -76,7 +76,7 @@ for site in sites:
             results = p.map(process_qa_pair, qa_pairs)
 
     print(f"Writing {len(results)} results to {os.path.join(LEMMA_DATA_DIR_SE_OUT, site)}")
-    
+
     with open(os.path.join(LEMMA_DATA_DIR_SE_OUT, site), "w") as f:
         for result in results:
             f.write(json.dumps(result) + "\n")
